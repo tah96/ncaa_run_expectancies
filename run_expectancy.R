@@ -10,18 +10,30 @@ setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
 pbp = read.csv('single_pbp.csv',header = TRUE)
 
 ## Next steps
+
+## Filter out non game-events 
+
+pbp_game_events <- pbp %>%
+  filter(!event_cd %in% c(0,1)) %>%
+  mutate(base_cd_after = case_when(
+    end_inning_flag != 1 ~ lead(base_cd_before,n=1)
+  ))
+
+View(pbp_game_events)
+
 ## Partition data by base-out state and AVERAGE runs til end of inning attributes
 
-re_matrix <- pbp %>%
+re_matrix <- pbp_game_events %>%
   mutate(runs_end_2 = end_half_inning_runs - current_runs) %>%
   group_by(base_cd_before,outs_before) %>%
   summarize(mean = mean(runs_end_2))
 
 View(re_matrix)
 
+
 ## Test a base/out state to validate results. Can do manual calculations if small enough dataset
 
-testing <- filter(pbp, base_cd_before == 5 & outs_before == 0)
+testing <- filter(pbp_game_events, base_cd_before == 7 & outs_before == 0)
 
 View(testing)
 
@@ -30,4 +42,6 @@ View(testing)
 write.csv(x = re_matrix,
           file = "RE_Matrix.csv",
           row.names = FALSE)
+
+
 
