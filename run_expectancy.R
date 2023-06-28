@@ -14,19 +14,21 @@ pbp = read.csv('single_pbp.csv',header = TRUE)
 ## Filter out non game-events 
 
 pbp_game_events <- pbp %>%
-  filter(!event_cd %in% c(0,1)) %>%
-  mutate(base_cd_after = case_when(
-    end_inning_flag != 1 ~ lead(base_cd_before,n=1)
-  ))
+  filter(!event_cd %in% c(0,1))# %>%
+  #mutate(base_cd_after = case_when(
+  #  end_inning_flag != 1 ~ lead(base_cd_before,n=1)
+ # ))
 
 View(pbp_game_events)
 
 ## Partition data by base-out state and AVERAGE runs til end of inning attributes
 
 re_matrix <- pbp_game_events %>%
-  mutate(runs_end_2 = end_half_inning_runs - current_runs) %>%
+  #mutate(runs_end_2 = end_half_inning_runs - current_runs) %>%
   group_by(base_cd_before,outs_before) %>%
-  summarize(mean = mean(runs_end_2))
+  summarize(mean = mean(runs_to_end))
+
+colnames(re_matrix) <- c('base_cd','outs','run_expectancy')
 
 View(re_matrix)
 

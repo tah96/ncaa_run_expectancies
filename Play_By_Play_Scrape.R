@@ -2,7 +2,7 @@ library("baseballr")
 library("dplyr")
 library("tidyverse")
 
-setwd('C:/Users/tyler/OneDrive/Coding Work Materials/NCSU_Baseball')
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
 
 all_schools <- ncaa_school_id_lu(team_name = "")
 d1_schools <- filter(all_schools, division == 1 & year == 2023)
@@ -359,6 +359,9 @@ pbp_dataframe_clean <- single_pbp_partial_clean %>%
   )
 
 pbp_data_frame <- pbp_dataframe_clean%>%
+  mutate(base_cd_after = case_when(
+      end_inning_flag != 1 ~ lead(base_cd_before,n=1)),
+    runs_to_end = end_half_inning_runs - current_runs) %>%
   select(-bat_text, -r1_text, -r2_text, -r3_text)
     
 #############################################################
