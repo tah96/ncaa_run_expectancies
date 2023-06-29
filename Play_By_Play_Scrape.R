@@ -366,7 +366,7 @@ pbp_data_frame <- pbp_dataframe_clean%>%
     
 #############################################################
 
-
+View(pbp_data_frame)
 #########################################
 
 write.csv(x = pbp_data_frame,
