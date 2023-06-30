@@ -25,3 +25,20 @@ pbp_re_merge <- pbp %>%
   mutate(run_value = ifelse(!is.na(base_cd_after),run_expectancy.y,0) - run_expectancy.x + (result_runs - current_runs))
 
 View(pbp_re_merge)
+
+## Calculate non-scaled Run Value matrix
+
+rv_matrix <-
+  pbp_re_merge %>%
+  group_by(event_cd) %>%
+  summarize(mean = mean(run_value))
+
+colnames(rv_matrix) <- c('event_cd','avg_run_val')
+
+View(rv_matrix)
+
+## Testing
+
+testing <- filter(pbp_re_merge, event_cd == 20)
+
+View(testing)
