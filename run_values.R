@@ -22,7 +22,17 @@ pbp_re_merge <- pbp %>%
               by=c('base_cd_after'='base_cd', 
                    'outs_after'='outs')
   ) %>%
-  mutate(run_value = ifelse(!is.na(base_cd_after),run_expectancy.y,0) - run_expectancy.x + (result_runs - current_runs))
+  mutate(run_value = ifelse(!is.na(base_cd_after),run_expectancy.y,0) - run_expectancy.x + (result_runs - current_runs)) %>%
+  mutate(group = case_when (
+    event_cd == 20 ~ 'Single',
+    event_cd == 21 ~ 'Double',
+    event_cd == 22 ~ 'Triple',
+    event_cd == 23 ~ 'Home Run',
+    event_cd == 14 ~ 'Walk',
+    event_cd == 16 ~ 'HBP',
+    event_cd %in% c(2,3,6,8,19) ~ 'Outs',
+    TRUE ~ 'Other'
+  ))
 
 View(pbp_re_merge)
 
