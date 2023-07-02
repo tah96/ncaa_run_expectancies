@@ -23,7 +23,7 @@ pbp_re_merge <- pbp %>%
                    'outs_after'='outs')
   ) %>%
   mutate(run_value = ifelse(!is.na(base_cd_after),run_expectancy.y,0) - run_expectancy.x + (result_runs - current_runs)) %>%
-  mutate(group = case_when (
+  mutate(event_group = case_when (
     event_cd == 20 ~ 'Single',
     event_cd == 21 ~ 'Double',
     event_cd == 22 ~ 'Triple',
@@ -40,15 +40,28 @@ View(pbp_re_merge)
 
 rv_matrix <-
   pbp_re_merge %>%
-  group_by(event_cd) %>%
-  summarize(mean = mean(run_value))
+  group_by(event_group) %>%
+  summarize(mean = mean(run_value)) %>%
+  arrange(desc(event_group))
 
-colnames(rv_matrix) <- c('event_cd','avg_run_val')
+colnames(rv_matrix) <- c('event_group','avg_run_val')
 
 View(rv_matrix)
 
+unscaled_out_value <- rv_matrix$avg_run_val[3]
+
+scaled_rv_values <- rv_matrix$avg_run_val - unscaled_out_value
+
+scaled_rv_matrix <- rv_matrix %>%
+  mutate(scale_run_val = scaled_rv_values) %>%
+  select(-avg_run_val)
+
+write.csv(x = scaled_rv_matrix,
+          file = "SRV_Matrix.csv",
+          row.names = FALSE)
+
 ## Testing
 
-testing <- filter(pbp_re_merge, event_cd == 20)
+##testing <- filter(pbp_re_merge, event_cd == 20)
 
 View(testing)
