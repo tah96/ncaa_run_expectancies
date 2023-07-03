@@ -25,6 +25,7 @@ x <- ncaa_schedule_info(490, 2023)
 ## Using first available game of season only for testing only
 single_bscore <- x$game_info_url[1]
 single_pbp <- ncaa_pbp(game_info_url = single_bscore)
+print(single_bscore)
 
 ## Removing summary stats that are optional at the end of each inning to get rid of noise
 
