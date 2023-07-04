@@ -34,11 +34,6 @@ for (team in next_run) {
   pbp_scrape(team)
 }
 
-##pbp_scrape(368)
-
-##length(bscore_vec)
-##length(unique(bscore_vec))
-
 write.csv(x = bscore_vec,
           file = "bscore_list.csv",
           row.names = FALSE)
