@@ -2,12 +2,23 @@ library("baseballr")
 library("dplyr")
 library("tidyverse")
 
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials')
+
+pbp <- read.csv(file="pbp.csv",
+                header=TRUE)
+
 setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
 
-all_schools <- ncaa_school_id_lu(team_name = "")
-d1_schools <- filter(all_schools, division == 1 & year == 2023)
-all_team_ids <- sort(unique(d1_schools$team_id), decreasing = FALSE)
-nc_state_test <- filter(all_schools,team_name == 'NC State')
+game_ids <- unique(pbp$game_pbp_id)
+
+test_games <- sample(game_ids,size=10,replace=FALSE)
+
+test_games_pbp <- filter(pbp,game_pbp_id %in% test_games)
+
+#all_schools <- ncaa_school_id_lu(team_name = "")
+#d1_schools <- filter(all_schools, division == 1 & year == 2023)
+#all_team_ids <- sort(unique(d1_schools$team_id), decreasing = FALSE)
+#nc_state_test <- filter(all_schools,team_name == 'NC State')
 
 ## 490 is NC State's team_id
 ### NEEDS ####
@@ -20,12 +31,12 @@ nc_state_test <- filter(all_schools,team_name == 'NC State')
 
 ## Grabbing the schedule info for NC State for 2023
 
-x <- ncaa_schedule_info(490, 2023)
+#x <- ncaa_schedule_info(490, 2023)
 
 ## Using first available game of season only for testing only
-single_bscore <- x$game_info_url[1]
-single_pbp <- ncaa_pbp(game_info_url = single_bscore)
-print(single_bscore)
+#single_bscore <- x$game_info_url[1]
+#single_pbp <- ncaa_pbp(game_info_url = single_bscore)
+#print(single_bscore)
 
 ## Removing summary stats that are optional at the end of each inning to get rid of noise
 
