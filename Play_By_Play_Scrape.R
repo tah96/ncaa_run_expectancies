@@ -41,25 +41,29 @@ test_games_pbp <- filter(pbp,game_pbp_id %in% test_games)
 ## Removing summary stats that are optional at the end of each inning to get rid of noise
 
 summary_stats <- c('R:', 'H:', 'LOB:')
-single_pbp <- filter(single_pbp,!grepl(paste(summary_stats, collapse = '|'),description))
+set_pbp <- filter(test_games_pbp,!grepl(paste(summary_stats, collapse = '|'),description))
 
 ## Attributes useful for other calculations
 
-single_pbp <- single_pbp %>%
+## May need to consider incomplete innings
+
+set_pbp <- set_pbp %>%
+  separate(score, c('away_score', 'home_score'), sep="-") %>%
+  group_by(game_pbp_id) %>%
   mutate(inning_half = case_when(inning_top_bot == 'top' ~ ((strtoi(inning) * 2) - 1), # in this case, set WL to 1
                         TRUE  ~ (strtoi(inning) * 2)),
-         result_runs = strtoi(sub("\\-.*","",score)) + strtoi(sub("*.\\-","",score)),
+         result_runs = strtoi(away_score) + strtoi(home_score),
          current_runs = lag(result_runs,n=1,default=0),
-         row_id = row_number()
-  )
+         row_id = row_number()) %>%
+  ungroup()
 
 ### Additional Cleaning based on each half-inning. Top inning, end of inning is important for utilizing Dav Miller's R Code
-single_pbp_partial_clean <- single_pbp %>% 
-  group_by(inning_half) %>%
+set_pbp_partial_clean <- set_pbp %>% 
+  group_by(game_pbp_id,inning_half) %>%
 
   mutate(
-    top_inning_flag = ifelse(min(which(single_pbp$inning_half == inning_half))==row_id,1,0),
-    end_inning_flag = ifelse(max(which(single_pbp$inning_half == inning_half))==row_id,1,0),
+    top_inning_flag = ifelse(min(which(set_pbp$inning_half == inning_half))==row_id,1,0),
+    end_inning_flag = ifelse(max(which(set_pbp$inning_half == inning_half))==row_id,1,0),
     end_half_inning_runs = max(result_runs)
     ) %>% 
   ungroup()
@@ -188,7 +192,7 @@ new_game=function(game_end){
 
 ####################################
 
-pbp_dataframe_clean <- single_pbp_partial_clean %>%
+pbp_dataframe_clean <- set_pbp_partial_clean %>%
   mutate(
     ##tmp_text=paste(away_text,home_text),
     ###  # 
