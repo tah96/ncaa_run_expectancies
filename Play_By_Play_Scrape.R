@@ -62,10 +62,21 @@ set_pbp_partial_clean <- set_pbp %>%
   group_by(game_pbp_id,inning_half) %>%
 
   mutate(
-    top_inning_flag = ifelse(min(which(set_pbp$inning_half == inning_half))==row_id,1,0),
-    end_inning_flag = ifelse(max(which(set_pbp$inning_half == inning_half))==row_id,1,0),
+    ## Top inning flag has potential for issues with non-game events
+    top_inning_flag = case_when(row_id == min(row_id) ~ 1,
+                      TRUE ~ 0),
+    end_inning_flag = case_when(row_id == max(row_id) ~ 1,
+                      TRUE ~ 0),
     end_half_inning_runs = max(result_runs)
     ) %>% 
+  ungroup() %>%
+  group_by(game_pbp_id) %>%
+  mutate (
+    new_game = case_when(row_id == min(row_id) ~ 1,
+                TRUE ~ 0),
+    end_game = case_when(row_id == max(row_id) ~ 1,
+                TRUE ~ 0)
+  ) %>%
   ungroup()
 
 ## Some functions
@@ -78,9 +89,6 @@ strip_punc <- function(x){
   return(x)}
 
 
-
-
-
 ##########################################################
 ##########################################################
 ##########################################################
@@ -90,12 +98,9 @@ strip_punc <- function(x){
 ##########################################################################
 #########################################################################
 
-
-
-
-
-
 # Functions for parsing 
+
+## May be able to remove game_end and new_game functions after code changes above that are simpler.
 
 game_end = function(game_id){
   m=length(game_id)
