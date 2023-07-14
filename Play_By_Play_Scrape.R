@@ -1,3 +1,9 @@
+##################################
+#### PBP_transformation_script ###
+##################################
+
+## Read in necessary packages and file ##
+
 library("baseballr")
 library("dplyr")
 library("tidyverse")
@@ -9,34 +15,14 @@ pbp <- read.csv(file="pbp.csv",
 
 setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
 
+### From the PBP file, only pull the unique game_pbp_ids to be sampled from for QA testing ###
+### Only keep games from random sample ###
+
 game_ids <- unique(pbp$game_pbp_id)
 
 test_games <- sample(game_ids,size=10,replace=FALSE)
 
 test_games_pbp <- filter(pbp,game_pbp_id %in% test_games)
-
-#all_schools <- ncaa_school_id_lu(team_name = "")
-#d1_schools <- filter(all_schools, division == 1 & year == 2023)
-#all_team_ids <- sort(unique(d1_schools$team_id), decreasing = FALSE)
-#nc_state_test <- filter(all_schools,team_name == 'NC State')
-
-## 490 is NC State's team_id
-### NEEDS ####
-# 1) Start of Inning position
-# 2) End of Inning position
-# 3) Previous Base-Out State
-# 4) Result
-# 5) New Base-Out State
-# 6) Runs scored til end of inning
-
-## Grabbing the schedule info for NC State for 2023
-
-#x <- ncaa_schedule_info(490, 2023)
-
-## Using first available game of season only for testing only
-#single_bscore <- x$game_info_url[1]
-#single_pbp <- ncaa_pbp(game_info_url = single_bscore)
-#print(single_bscore)
 
 ## Removing summary stats that are optional at the end of each inning to get rid of noise
 
@@ -44,50 +30,61 @@ summary_stats <- c('R:', 'H:', 'LOB:')
 set_pbp <- filter(test_games_pbp,!grepl(paste(summary_stats, collapse = '|'),description))
 
 ## Attributes useful for other calculations
+## May need to consider incomplete innings later
 
-## May need to consider incomplete innings
+## Transforming 2+ columns into 1 for ease of calculation later. Assigning a row_id for each game. This will be important later ##
 
 set_pbp <- set_pbp %>%
   separate(score, c('away_score', 'home_score'), sep="-") %>%
+  
+  ## First set of caclualations partitioned by game ###
   group_by(game_pbp_id) %>%
   mutate(inning_half = case_when(inning_top_bot == 'top' ~ ((strtoi(inning) * 2) - 1), # in this case, set WL to 1
                         TRUE  ~ (strtoi(inning) * 2)),
          result_runs = strtoi(away_score) + strtoi(home_score),
          current_runs = lag(result_runs,n=1,default=0),
-         row_id = row_number()) %>%
-  ungroup()
+         row_id = row_number(),
+         new_game = case_when(row_id == min(row_id) ~ 1,
+                              TRUE ~ 0),
+         end_game = case_when(row_id == max(row_id) ~ 1,
+                              TRUE ~ 0)) %>%
+  ungroup() %>%
+  ######################################################
 
-### Additional Cleaning based on each half-inning. Top inning, end of inning is important for utilizing Dav Miller's R Code
-set_pbp_partial_clean <- set_pbp %>% 
+  ## Second set of calculations partitioned by game and half-inning 
   group_by(game_pbp_id,inning_half) %>%
-
   mutate(
     ## Top inning flag has potential for issues with non-game events
     top_inning_flag = case_when(row_id == min(row_id) ~ 1,
-                      TRUE ~ 0),
+                                TRUE ~ 0),
     end_inning_flag = case_when(row_id == max(row_id) ~ 1,
-                      TRUE ~ 0),
+                                TRUE ~ 0),
     end_half_inning_runs = max(result_runs)
-    ) %>% 
+  ) %>% 
   ungroup() %>%
-  group_by(game_pbp_id) %>%
-  mutate (
-    new_game = case_when(row_id == min(row_id) ~ 1,
-                TRUE ~ 0),
-    end_game = case_when(row_id == max(row_id) ~ 1,
-                TRUE ~ 0)
-  ) %>%
-  ungroup()
+  ######################################################
 
-## Some functions
-
-stripwhite <- function(x) gsub("\\s*$", "", gsub("^\\s*", "", x))
-
-strip_punc <- function(x){ 
-  x=stripwhite(x)
-  x=ifelse(str_sub(x,-1)=='.',gsub("\\.", "", x),x)
-  return(x)}
-
+### Additional Cleaning based on each half-inning. Top inning, end of inning is important for utilizing Dav Miller's R Code
+# set_pbp_partial_clean <- set_pbp %>% 
+#   group_by(game_pbp_id,inning_half) %>%
+# 
+#   mutate(
+#     ## Top inning flag has potential for issues with non-game events
+#     top_inning_flag = case_when(row_id == min(row_id) ~ 1,
+#                       TRUE ~ 0),
+#     end_inning_flag = case_when(row_id == max(row_id) ~ 1,
+#                       TRUE ~ 0),
+#     end_half_inning_runs = max(result_runs)
+#     ) %>% 
+#   ungroup() %>%
+#   group_by(game_pbp_id) %>%
+#   mutate (
+#     new_game = case_when(row_id == min(row_id) ~ 1,
+#                 TRUE ~ 0),
+#     end_game = case_when(row_id == max(row_id) ~ 1,
+#                 TRUE ~ 0)
+#   ) %>%
+#   ungroup()
 
 ##########################################################
 ##########################################################
@@ -99,6 +96,13 @@ strip_punc <- function(x){
 #########################################################################
 
 # Functions for parsing 
+
+stripwhite <- function(x) gsub("\\s*$", "", gsub("^\\s*", "", x))
+
+strip_punc <- function(x){ 
+  x=stripwhite(x)
+  x=ifelse(str_sub(x,-1)=='.',gsub("\\.", "", x),x)
+  return(x)}
 
 ## May be able to remove game_end and new_game functions after code changes above that are simpler.
 
@@ -192,15 +196,10 @@ new_game=function(game_end){
   return(new_game)
 }
 
-
-## Base Out States #################
-
-####################################
+### Applying functions to dataframe for cleaning & parsing ###
 
 pbp_dataframe_clean <- set_pbp_partial_clean %>%
   mutate(
-    ##tmp_text=paste(away_text,home_text),
-    ###  # 
     
     sub_fl=case_when(
       str_detect(description, '(singled|doubled|tripled|homered|walked|reached|struck out|grounded|flied|lined|popped| hit|infield fly|infield fly|out|double play|triple play)')==TRUE & str_detect(description, c('pinch hit'))==FALSE ~ 0,
@@ -379,6 +378,8 @@ pbp_dataframe_clean <- set_pbp_partial_clean %>%
       TRUE~0 )
   )
 
+#### Post Dan Miller changes that will be used for calculating run expectancy in run_expectancy script ###
+
 pbp_data_frame <- pbp_dataframe_clean%>%
   mutate(base_cd_after = case_when(
       end_inning_flag != 1 ~ lead(base_cd_before,n=1)),
@@ -390,6 +391,8 @@ pbp_data_frame <- pbp_dataframe_clean%>%
 View(pbp_data_frame)
 #########################################
 
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials')
+
 write.csv(x = pbp_data_frame,
-          file = "single_pbp.csv",
+          file = "parsed_pbp.csv",
           row.names = FALSE)

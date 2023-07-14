@@ -6,8 +6,8 @@ library("dplyr")
 library("tidyverse")
 
 ## Set working directory and read in PBP CSV
-setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
-pbp = read.csv('single_pbp.csv',header = TRUE)
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials')
+pbp = read.csv('parsed_pbp.csv',header = TRUE)
 
 ## Next steps
 
@@ -29,7 +29,6 @@ colnames(re_matrix) <- c('base_cd','outs','run_expectancy')
 
 View(re_matrix)
 
-
 ## Test a base/out state to validate results. Can do manual calculations if small enough dataset
 
 testing <- filter(pbp_game_events, base_cd_before == 7 & outs_before == 0)
@@ -38,9 +37,8 @@ View(testing)
 
 ## Write final results to a CSV file
 
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
+
 write.csv(x = re_matrix,
           file = "RE_Matrix.csv",
           row.names = FALSE)
-
-
-
