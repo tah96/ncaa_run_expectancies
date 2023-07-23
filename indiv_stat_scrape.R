@@ -53,3 +53,27 @@ for (i in standard_links) {
   ncaa_bat_stats <<- rbind(ncaa_bat_stats,bat_df,use.names=TRUE,fill=TRUE)
   ncaa_pit_stats <<- rbind(ncaa_pit_stats,pit_df,use.names=TRUE,fill=TRUE)
 }
+
+## Non-norm conference stat pages
+
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
+
+nnorm_page <- read_html('https://a.espncdn.com/sec/baseball/2023/lgplyrs.htm')
+sec_table <- nnorm_page %>%
+  html_element("pre") %>%
+  html_element("font") %>%
+  html_text()
+
+lets_see <- gsub(" ",",",sec_table)
+
+while (grepl(",,",lets_see)) {
+  lets_see <<- gsub(",,",",",lets_see)
+}
+
+writeLines(lets_see,con=file("sec_bat.csv",open="w+"),sep="\n")
+writeLines(lets_see,con=file("sec_pit.csv",open="w+"),sep="\n")
+
+## Some manual processing needed prior to next steps. Totals < 1 min ##
+
+sec_bat <- read.csv("sec_bat.csv")
+sec_pit <- read.csv("sec_pit.csv")
