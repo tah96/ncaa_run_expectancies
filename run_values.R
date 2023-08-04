@@ -31,6 +31,7 @@ pbp_re_merge <- pbp %>%
     event_cd == 14 ~ 'Walk',
     event_cd == 16 ~ 'HBP',
     event_cd %in% c(2,3,6,8,19) ~ 'Outs',
+    ### Other to be modified ###
     TRUE ~ 'Other'
   ))
 

@@ -232,7 +232,9 @@ pbp_dataframe_clean <- set_pbp_partial_clean %>%
       #sub_fl==1 ~ 1,
       str_sub(stripwhite(description),1,1)=='(' ~ 1,
       str_detect(description, '(hitting out of turn| for |No play|halted|delay|postponed|ejected|suspended|coach|sunny|review|challenged|HC|\\*\\*)') == TRUE ~ 1,
+      ### K's separate from outs ###
       str_detect(description,'struck out') == TRUE ~ 3,
+      ### Does not help you get on base ###
       str_detect(description,'stole') == TRUE ~ 4,
       (str_detect(description,'(caught stealing|out at second c to|out at third c to)') == TRUE) & (str_detect(description,'(bunt|grounded)') == FALSE) ~ 6,
       str_detect(description,'picked off') == TRUE ~ 8,

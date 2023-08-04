@@ -1,5 +1,7 @@
 #install.packages("rvest")
 library(rvest)
+library(dplyr)
+library(tidyverse)
 
 ### Following conferences missing from below ###
 ### PAC-12, SEC, SOCON ###
@@ -69,23 +71,28 @@ for (i in standard_links) {
 }
 
 for (i in pac12_links) {
-  page <- read_html(i)
-  
-  stats_bat <- page %>%
-    html_node('#ind_hitting') %>%
-    html_element("table") %>%
-    html_table()
-  
-  stats_pit <- page %>%
-    html_node('#ind_pitching') %>%
-    html_element("table") %>%
-    html_table()
-  
-  bat_df <- data.frame(stats_bat)
-  pit_df <- data.frame(stats_pit)
-  
-  pac12_bat_stats <<- rbind(pac12_bat_stats,bat_df,use.names=TRUE,fill=TRUE)
-  pac12_pit_stats <<- rbind(pac12_pit_stats,pit_df,use.names=TRUE,fill=TRUE)
+    page <- read_html(i)
+    
+    stats_bat <- page %>%
+      html_node('#individual-overall-batting') %>%
+      html_element("table") %>%
+      html_table()
+    
+    ### Will have to reorganize to use selenium in the future. To access pitching requires to click a button. This is not 
+    ### possible with rvest
+    
+    ##stats_pit <- page %>%
+    ##  html_node('#individual-overall-pitching') %>%
+    ##  html_element("table") %>%
+    ##  html_table()
+    
+    bat_df <- data.frame(stats_bat)
+    #pit_df <- data.frame(stats_pit)
+    
+    pac12_bat_stats <<- rbind(pac12_bat_stats,bat_df,use.names=TRUE,fill=TRUE)
+    #pac12_pit_stats <<- rbind(pac12_pit_stats,pit_df,use.names=TRUE,fill=TRUE)
+    
+    print(i)
 }
 
 ## Non-norm conference stat pages
@@ -109,6 +116,18 @@ writeLines(lets_see,con=file("socon_bat2.csv",open="w+"),sep="\n")
 writeLines(lets_see,con=file("socon_pit.csv",open="w+"),sep="\n")
 
 ## Some manual processing needed prior to next steps. Totals < 1 min ##
+
+pac12_cnames <- colnames(pac12_bat_stats)
+
+View(pac12_bat_stats)
+
+pac12_bat_clean <- pac12_bat_stats %>%
+  filter(!is.na(X.) & Player != 'TRUE') %>%
+  mutate(Player = str_remove_all(Player," "))
+
+View(pac12_bat_clean)
+
+
 
 sec_bat <- read.csv("sec_bat.csv")
 sec_pit <- read.csv("sec_pit.csv")
