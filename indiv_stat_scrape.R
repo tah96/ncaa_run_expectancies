@@ -117,17 +117,25 @@ writeLines(lets_see,con=file("socon_pit.csv",open="w+"),sep="\n")
 
 ## Some manual processing needed prior to next steps. Totals < 1 min ##
 
-pac12_cnames <- colnames(pac12_bat_stats)
+############## PAC-12 Cleaning ######################
 
-View(pac12_bat_stats)
+new_player_vec <- c()
+
+for (player in pac12_bat_stats$Player) {
+  first_clean <- str_replace_all(str_remove_all(player," "),"\r\n"," ")
+  new_player <- substr(first_clean,start=1,stop=unlist(gregexpr(" ",first_clean))[1]-1)
+  new_player_vec <<- append(new_player_vec,new_player)
+}
+
+pac12_bat_stats$Player = new_player_vec
 
 pac12_bat_clean <- pac12_bat_stats %>%
-  filter(!is.na(X.) & Player != 'TRUE') %>%
-  mutate(Player = str_remove_all(Player," "))
+  filter(Player != "")
+
 
 View(pac12_bat_clean)
 
-
+################################################################
 
 sec_bat <- read.csv("sec_bat.csv")
 sec_pit <- read.csv("sec_pit.csv")
