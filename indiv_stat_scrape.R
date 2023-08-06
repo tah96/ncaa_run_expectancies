@@ -33,7 +33,7 @@ standard_links <- c('https://theacc.com/stats.aspx?path=baseball&year=2023#indiv
            'https://sunbeltsports.org/stats.aspx?path=baseball&year=2023',
            'https://wccsports.com/stats.aspx?path=baseball&year=2023')
 
-pac12_links <- c('https://thesundevils.com/sports/baseball/stats/2023',
+pac12_links <- data.frame(links = c('https://thesundevils.com/sports/baseball/stats/2023',
                  'https://calbears.com/sports/baseball/stats/2023',
                  'https://arizonawildcats.com/sports/baseball/stats/2023',
                  'https://osubeavers.com/sports/baseball/stats/2023',
@@ -43,7 +43,8 @@ pac12_links <- c('https://thesundevils.com/sports/baseball/stats/2023',
                  'https://gostanford.com/sports/baseball/stats/2023',
                  'https://wsucougars.com/sports/baseball/stats/2023',
                  'https://gohuskies.com/sports/baseball/stats/2023',
-                 'https://utahutes.com/sports/baseball/stats/2023')
+                 'https://utahutes.com/sports/baseball/stats/2023'),
+                  team_name = c('Arizona State', 'California', 'Arizona', 'Oregon State','Oregon','Southern Cal','UCLA','Stanford','Washington State','Washington','Utah'))
 
 ncaa_bat_stats = data.frame()
 ncaa_pit_stats = data.frame()
@@ -70,8 +71,13 @@ for (i in standard_links) {
   ncaa_pit_stats <<- rbind(ncaa_pit_stats,pit_df,use.names=TRUE,fill=TRUE)
 }
 
-for (i in pac12_links) {
-    page <- read_html(i)
+for (i in 1:nrow(pac12_links)) {
+  url <- pac12_links[i,1]
+  print(url)
+}
+
+for (i in 1:nrow(pac12_links)) {
+    page <- read_html(pac12_links[i,1])
     
     stats_bat <- page %>%
       html_node('#individual-overall-batting') %>%
@@ -87,6 +93,7 @@ for (i in pac12_links) {
     ##  html_table()
     
     bat_df <- data.frame(stats_bat)
+    bat_df$Team <- pac12_links[i,2]
     #pit_df <- data.frame(stats_pit)
     
     pac12_bat_stats <<- rbind(pac12_bat_stats,bat_df,use.names=TRUE,fill=TRUE)
@@ -130,7 +137,8 @@ for (player in pac12_bat_stats$Player) {
 pac12_bat_stats$Player = new_player_vec
 
 pac12_bat_clean <- pac12_bat_stats %>%
-  filter(Player != "")
+  filter(Player != "") %>%
+  separate(Player, c("FirstName", "LastName"), ",")
 
 
 View(pac12_bat_clean)
@@ -141,3 +149,5 @@ sec_bat <- read.csv("sec_bat.csv")
 sec_pit <- read.csv("sec_pit.csv")
 socon_bat <- read.csv("socon_bat.csv")
 socon_pit <- read.csv("socon_pit.csv")
+
+View(socon_bat)
