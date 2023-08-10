@@ -72,11 +72,6 @@ for (i in standard_links) {
 }
 
 for (i in 1:nrow(pac12_links)) {
-  url <- pac12_links[i,1]
-  print(url)
-}
-
-for (i in 1:nrow(pac12_links)) {
     page <- read_html(pac12_links[i,1])
     
     stats_bat <- page %>%
@@ -138,10 +133,35 @@ pac12_bat_stats$Player = new_player_vec
 
 pac12_bat_clean <- pac12_bat_stats %>%
   filter(Player != "") %>%
-  separate(Player, c("FirstName", "LastName"), ",")
-
+  separate(Player, c("FirstName", "LastName"), ",") %>%
+  separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
+  rename(GP_GS = GP.GS,SLG = SLG.,OBP = OB.) %>%
+  select(FirstName,LastName,Team,AVG,OPS,GP_GS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
 View(pac12_bat_clean)
+
+write.csv(pac12_bat_clean,"pac12_bat_clean")
+
+################################################################
+
+########### NCAA General Cleaning ##############################
+
+View(ncaa_bat_stats)
+
+ncaa_player_vec <- c()
+
+for (player in ncaa_bat_stats$Player) {
+  ncaa_player <- str_replace_all(str_replace_all(player," ",","),",,",",")
+  print(ncaa_player)
+  ncaa_player_vec <<- append(ncaa_player_vec,ncaa_player)
+}
+
+### Some teams having commas which could cause issues
+
+ncaa_bat_clean <- ncaa_bat_stats %>%
+  separate(Player,c("FirstName,LastName,Team"),sep="")
+
+View(ncaa_bat_clean)
 
 ################################################################
 
@@ -151,3 +171,4 @@ socon_bat <- read.csv("socon_bat.csv")
 socon_pit <- read.csv("socon_pit.csv")
 
 View(socon_bat)
+View(ncaa_bat_stats)
