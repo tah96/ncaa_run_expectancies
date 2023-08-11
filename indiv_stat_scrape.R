@@ -149,17 +149,30 @@ write.csv(pac12_bat_clean,"pac12_bat_clean")
 View(ncaa_bat_stats)
 
 ncaa_player_vec <- c()
+ncaa_team_vec <- c()
 
 for (player in ncaa_bat_stats$Player) {
-  ncaa_player <- str_replace_all(str_replace_all(player," ",","),",,",",")
-  print(ncaa_player)
+  player_and_team <- strsplit(player, '[()]')
+  player_pre_clean <- player_and_team[[1]][1]
+  team <- player_and_team[[1]][2]
+  ncaa_player <- str_replace_all(str_replace_all(player_pre_clean," ",","),",,",",")
   ncaa_player_vec <<- append(ncaa_player_vec,ncaa_player)
+  ncaa_team_vec <<- append(ncaa_team_vec,team)
 }
+
+ncaa_bat_stats$Player = ncaa_player_vec
+ncaa_bat_stats$Team = ncaa_team_vec
+
+##reg_player <- ncaa_bat_stats$Player[873]
+##second <- strsplit(reg_player, "[()]")
+##print(second[[1]][1])
+##single_space_player <- ncaa_bat_stats$Player[856]
+##multi_spaced_player <- ncaa_bat_stats$Player[965]
 
 ### Some teams having commas which could cause issues
 
 ncaa_bat_clean <- ncaa_bat_stats %>%
-  separate(Player,c("FirstName,LastName,Team"),sep="")
+  separate(Player,c("FirstName","LastName","Team"),sep=",")
 
 View(ncaa_bat_clean)
 
