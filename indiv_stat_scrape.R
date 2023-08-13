@@ -23,7 +23,7 @@ standard_links <- c('https://theacc.com/stats.aspx?path=baseball&year=2023#indiv
            'https://maacsports.com/stats.aspx?path=baseball&year=2023',
            'https://getsomemaction.com/stats.aspx?path=baseball&year=2023',
            'https://mvc-sports.com/stats.aspx?path=baseball&year=2023',
-           'https://themw.com/stats.aspx?path=baseball&year=2023',
+       ##    'https://themw.com/stats.aspx?path=baseball&year=2023',
            'https://northeastconference.org/stats.aspx?path=baseball&year=2023',
            'https://ovcsports.com/stats.aspx?path=baseball&year=2023',
            'https://patriotleague.org/stats.aspx?path=baseball&year=2023',
@@ -32,6 +32,12 @@ standard_links <- c('https://theacc.com/stats.aspx?path=baseball&year=2023#indiv
            'https://thesummitleague.org/stats.aspx?path=baseball&year=2023',
            'https://sunbeltsports.org/stats.aspx?path=baseball&year=2023',
            'https://wccsports.com/stats.aspx?path=baseball&year=2023')
+
+standard_links <- data.frame(links = c('https://theacc.com/stats.aspx?path=baseball&year=2023#individual'),
+                             schema = c('FirstLast'),
+                             separator = c(' '))
+
+View(standard_links)
 
 pac12_links <- data.frame(links = c('https://thesundevils.com/sports/baseball/stats/2023',
                  'https://calbears.com/sports/baseball/stats/2023',
@@ -51,8 +57,8 @@ ncaa_pit_stats = data.frame()
 pac12_bat_stats = data.frame()
 pac12_pit_stats = data.frame()
 
-for (i in standard_links) {
-  page <- read_html(i)
+for (i in 1:nrow(standard_links)) {
+  page <- read_html(standard_links[i,1])
   
   stats_bat <- page %>%
     html_node('#ind_hitting') %>%
@@ -69,7 +75,11 @@ for (i in standard_links) {
   
   ncaa_bat_stats <<- rbind(ncaa_bat_stats,bat_df,use.names=TRUE,fill=TRUE)
   ncaa_pit_stats <<- rbind(ncaa_pit_stats,pit_df,use.names=TRUE,fill=TRUE)
+  
+  print(i)
 }
+
+View(ncaa_bat_stats)
 
 for (i in 1:nrow(pac12_links)) {
     page <- read_html(pac12_links[i,1])
@@ -135,6 +145,7 @@ pac12_bat_clean <- pac12_bat_stats %>%
   filter(Player != "") %>%
   separate(Player, c("FirstName", "LastName"), ",") %>%
   separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
+  separate(GP.GS,c("GP","GS"),"-") %>%
   rename(GP_GS = GP.GS,SLG = SLG.,OBP = OB.) %>%
   select(FirstName,LastName,Team,AVG,OPS,GP_GS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
@@ -148,31 +159,83 @@ write.csv(pac12_bat_clean,"pac12_bat_clean")
 
 View(ncaa_bat_stats)
 
-ncaa_player_vec <- c()
+ncaa_bat_copy <- ncaa_bat_stats
+
+View(ncaa_bat_copy)
+
+#ncaa_player_vec <- c()
+ncaa_player_fname <- c()
+ncaa_player_lname <- c()
 ncaa_team_vec <- c()
 
-for (player in ncaa_bat_stats$Player) {
-  player_and_team <- strsplit(player, '[()]')
+for (j in 1:nrow(ncaa_bat_copy)){
+  player_and_team <- strsplit(ncaa_bat_copy$Player[j],'[()]')
   player_pre_clean <- player_and_team[[1]][1]
   team <- player_and_team[[1]][2]
-  ncaa_player <- str_replace_all(str_replace_all(player_pre_clean," ",","),",,",",")
-  ncaa_player_vec <<- append(ncaa_player_vec,ncaa_player)
   ncaa_team_vec <<- append(ncaa_team_vec,team)
+  if (grepl(",",player_pre_clean)==TRUE) {
+    print("LastFirst") 
+    ncaa_player <- player_pre_clean
+    player_name_split <- strsplit(ncaa_player, ',')
+    ncaa_player_fname <<- append(ncaa_player_fname,trimws(player_name_split[[1]][2]))
+    ncaa_player_lname <<- append(ncaa_player_lname,trimws(player_name_split[[1]][1]))
+  }
+  else {
+    print("FirstLast")
+    ncaa_player <- str_replace_all(str_replace(player_pre_clean,"\\s+", ","),",,",",")
+    player_name_split <- strsplit(ncaa_player, ',')
+    ncaa_player_fname <<- append(ncaa_player_fname,trimws(player_name_split[[1]][1]))
+    ncaa_player_lname <<- append(ncaa_player_lname,trimws(player_name_split[[1]][2]))
+  }
 }
 
-ncaa_bat_stats$Player = ncaa_player_vec
-ncaa_bat_stats$Team = ncaa_team_vec
+ncaa_player_fname
+ncaa_player_lname
+
+#for (player in ncaa_bat_copy$Player) {
+#  player_and_team <- strsplit(player, '[()]')
+#  player_pre_clean <- player_and_team[[1]][1]
+#  team <- player_and_team[[1]][2]
+#  print(player)
+#  ncaa_player <- str_replace_all(str_sub(str_replace(player_pre_clean,"\\s+", ","),end=-2),",,",",")
+  #ncaa_player <- str_sub(str_replace_all(str_replace_all(player_pre_clean," ",","),",,",","),end=-2)
+#  ncaa_player_vec <<- append(ncaa_player_vec,ncaa_player)
+#  ncaa_team_vec <<- append(ncaa_team_vec,team)
+#}
+
+#ncaa_player_vec
+
+ncaa_bat_copy$FirstName = ncaa_player_fname
+ncaa_bat_copy$LastName = ncaa_player_lname
+ncaa_bat_copy$Team = ncaa_team_vec
+
+View(ncaa_bat_copy)
 
 ##reg_player <- ncaa_bat_stats$Player[873]
-##second <- strsplit(reg_player, "[()]")
-##print(second[[1]][1])
-##single_space_player <- ncaa_bat_stats$Player[856]
-##multi_spaced_player <- ncaa_bat_stats$Player[965]
+##multi_spaced_player <- ncaa_bat_stats$Player[27]
+##player_with_comma <- ncaa_bat_stats$Player[25]
+#print(reg_player)
+#str_replace_all(str_sub(str_replace(reg_player,"\\s+", ","),end=-2),",,",",")
+#print(multi_spaced_player)
+#str_replace_all(str_sub(str_replace(multi_spaced_player,"\\s+", ","),end=-2),",,",",")
+#print(player_with_comma)
+#str_replace_all(str_sub(str_replace(player_with_comma,"\\s+", ","),end=-2),",,",",")
+#str_replace(multi_spaced_player,"\\s+", ",")
+#ncaa_bat_stats$Player[130, 195, 744, 834, 1056, 1346, 1738, 1770, 1806, 1877, 1879, 1963, 2149,
+#                      2243]
+ncaa_bat_stats$Player[195]
 
 ### Some teams having commas which could cause issues
 
-ncaa_bat_clean <- ncaa_bat_stats %>%
-  separate(Player,c("FirstName","LastName","Team"),sep=",")
+colnames(ncaa_bat_copy)
+
+ncaa_bat_clean <- ncaa_bat_copy %>%
+  filter(Player != "TRU") %>%
+  separate(Player,c("FirstName","LastName"),sep=",") %>%
+  separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
+  separate(GP.GS,c("GP","GS"),"-") %>%
+  rename(SLG = SLG.,OBP = OB.) %>%
+  select(FirstName,LastName,Team,AVG,OPS,GP,GS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
 View(ncaa_bat_clean)
 
