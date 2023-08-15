@@ -174,23 +174,27 @@ View(ncaa_bat_clean)
 
 ############## PAC-12 Cleaning ######################
 
+View(pac12_bat_stats)
+
+pac12_bat_copy <- pac12_bat_stats
+
 new_player_vec <- c()
 
-for (player in pac12_bat_stats$Player) {
+for (player in pac12_bat_copy$Player) {
   first_clean <- str_replace_all(str_remove_all(player," "),"\r\n"," ")
-  new_player <- substr(first_clean,start=1,stop=unlist(gregexpr(" ",first_clean))[1]-1)
+  new_player <- toupper(substr(first_clean,start=1,stop=unlist(gregexpr(" ",first_clean))[1]-1))
   new_player_vec <<- append(new_player_vec,new_player)
 }
 
-pac12_bat_stats$Player = new_player_vec
+pac12_bat_copy$Player = new_player_vec
 
-pac12_bat_clean <- pac12_bat_stats %>%
+pac12_bat_clean <- pac12_bat_copy %>%
   filter(Player != "") %>%
-  separate(Player, c("FirstName", "LastName"), ",") %>%
+  separate(Player, c("LastName", "FirstName"), ",") %>%
   separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
   separate(GP.GS,c("GP","GS"),"-") %>%
-  rename(GP_GS = GP.GS,SLG = SLG.,OBP = OB.) %>%
-  select(FirstName,LastName,Team,AVG,OPS,GP_GS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
+  rename(SLG = SLG.,OBP = OB.) %>%
+  select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
 View(pac12_bat_clean)
 
@@ -205,3 +209,11 @@ socon_pit <- read.csv("socon_pit.csv")
 
 View(socon_bat)
 View(ncaa_bat_stats)
+
+###############################################################
+
+########### Merging all separate cleanings together ###########
+
+combined_bats_df <- bind_rows(ncaa_bat_clean, pac12_bat_clean)
+
+View(combined_bats_df)
