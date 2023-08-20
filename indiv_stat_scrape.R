@@ -202,6 +202,34 @@ write.csv(pac12_bat_clean,"pac12_bat_clean")
 
 ################################################################
 
+##### Non Norm conference scrape ##############################
+
+socon_bat <- read.csv("socon_bat.csv")
+sec_bat <- read.csv("sec_bat.csv")
+
+socon_bat_clean <- socon_bat %>%
+  mutate(Team = gsub(".","",Team,fixed=TRUE),
+         OPS = OB. + SLG.) %>%
+  separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
+  separate(GP.GS,c("GP","GS"),"-") %>%
+  rename(SLG = SLG.,OBP = OB.) %>%
+  select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
+
+View(socon_bat_clean)
+
+sec_bat_clean <- sec_bat %>%
+  mutate(Team = gsub(".","",Team,fixed=TRUE),
+         OPS = OB. + SLG.) %>%
+  separate(SB.ATT,c("SB","SB_ATT"),"-") %>%
+  separate(GP.GS,c("GP","GS"),"-") %>%
+  rename(SLG = SLG.,OBP = OB.) %>%
+  select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
+
+View(sec_bat_clean)
+
+
+###############################################################
+
 sec_bat <- read.csv("sec_bat.csv")
 sec_pit <- read.csv("sec_pit.csv")
 socon_bat <- read.csv("socon_bat.csv")
@@ -215,5 +243,7 @@ View(ncaa_bat_stats)
 ########### Merging all separate cleanings together ###########
 
 combined_bats_df <- bind_rows(ncaa_bat_clean, pac12_bat_clean)
+sec_socon <- bind_rows(socon_bat_clean,sec_bat_clean)
 
 View(combined_bats_df)
+View(sec_socon)
