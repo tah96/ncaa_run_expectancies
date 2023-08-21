@@ -2,6 +2,8 @@ library(rvest)
 library(dplyr)
 library(tidyverse)
 
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies')
+
 standard_links <- c('https://theacc.com/stats.aspx?path=baseball&year=2023#individual',
            'https://bigten.org/stats.aspx?path=baseball&year=2023#individual',
            'https://theamerican.org/stats.aspx?path=baseball&year=2023',
@@ -129,9 +131,6 @@ writeLines(lets_see,con=file("socon_pit.csv",open="w+"),sep="\n")
 
 ncaa_bat_copy <- ncaa_bat_stats
 
-View(ncaa_bat_copy)
-
-#ncaa_player_vec <- c()
 ncaa_player_fname <- c()
 ncaa_player_lname <- c()
 ncaa_team_vec <- c()
@@ -166,15 +165,11 @@ ncaa_bat_clean <- ncaa_bat_copy %>%
   rename(SLG = SLG.,OBP = OB.) %>%
   select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
-View(ncaa_bat_clean)
-
 ################################################################
 
 ## Some manual processing needed prior to next steps. Totals < 1 min ##
 
 ############## PAC-12 Cleaning ######################
-
-View(pac12_bat_stats)
 
 pac12_bat_copy <- pac12_bat_stats
 
@@ -196,10 +191,6 @@ pac12_bat_clean <- pac12_bat_copy %>%
   rename(SLG = SLG.,OBP = OB.) %>%
   select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
-View(pac12_bat_clean)
-
-write.csv(pac12_bat_clean,"pac12_bat_clean")
-
 ################################################################
 
 ##### Non Norm conference scrape ##############################
@@ -215,8 +206,6 @@ socon_bat_clean <- socon_bat %>%
   rename(SLG = SLG.,OBP = OB.) %>%
   select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
-View(socon_bat_clean)
-
 sec_bat_clean <- sec_bat %>%
   mutate(Team = gsub(".","",Team,fixed=TRUE),
          OPS = OB. + SLG.) %>%
@@ -225,25 +214,13 @@ sec_bat_clean <- sec_bat %>%
   rename(SLG = SLG.,OBP = OB.) %>%
   select(FirstName,LastName,Team,GP,GS,AVG,OPS,AB,R,H,X2B,X3B,HR,RBI,TB,SLG,BB,HBP,SO,GDP,OBP,SF,SH,SB,SB_ATT)
 
-View(sec_bat_clean)
-
-
-###############################################################
-
-sec_bat <- read.csv("sec_bat.csv")
-sec_pit <- read.csv("sec_pit.csv")
-socon_bat <- read.csv("socon_bat.csv")
-socon_pit <- read.csv("socon_pit.csv")
-
-View(socon_bat)
-View(ncaa_bat_stats)
 
 ###############################################################
 
 ########### Merging all separate cleanings together ###########
 
-combined_bats_df <- bind_rows(ncaa_bat_clean, pac12_bat_clean)
-sec_socon <- bind_rows(socon_bat_clean,sec_bat_clean)
+combined_bats_df <- bind_rows(ncaa_bat_clean, pac12_bat_clean,socon_bat_clean,sec_bat_clean)
 
 View(combined_bats_df)
-View(sec_socon)
+
+write.csv(combined_bats_df, "ncaa_qual_hitters_2023.csv")
