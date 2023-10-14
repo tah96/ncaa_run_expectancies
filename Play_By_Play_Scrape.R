@@ -9,6 +9,7 @@ library("dplyr")
 library("tidyverse")
 
 setwd('C:/Users/tyler/OneDrive/Coding Work Materials')
+setwd('C:/Users/tyler/OneDrive/Coding Work Materials/ncaa_run_expectancies_file_archive')
 
 pbp <- read.csv(file="pbp.csv",
                 header=TRUE)
@@ -36,7 +37,6 @@ set_pbp <- filter(test_games_pbp,!grepl(paste(summary_stats, collapse = '|'),des
 
 set_pbp <- set_pbp %>%
   separate(score, c('away_score', 'home_score'), sep="-") %>%
-  
   ## First set of caclualations partitioned by game ###
   group_by(game_pbp_id) %>%
   mutate(inning_half = case_when(inning_top_bot == 'top' ~ ((strtoi(inning) * 2) - 1), # in this case, set WL to 1
@@ -61,7 +61,7 @@ set_pbp <- set_pbp %>%
                                 TRUE ~ 0),
     end_half_inning_runs = max(result_runs)
   ) %>% 
-  ungroup() %>%
+  ungroup() ##%>%
   ######################################################
 
 ### Additional Cleaning based on each half-inning. Top inning, end of inning is important for utilizing Dav Miller's R Code
@@ -242,6 +242,9 @@ pbp_dataframe_clean <- set_pbp_partial_clean %>%
       str_detect(description,'passed ball') == TRUE ~ 10,
       str_detect(description,'balk') == TRUE ~ 11,
       str_detect(description,'Dropped foul') == TRUE ~ 13,
+      ### New line to test ###
+      str_detect(description,'intentionally walked') == TRUE ~ 24,
+      ##########################
       str_detect(description,'walked') == TRUE ~ 14,
       str_detect(description,'hit by pitch') == TRUE ~ 16,
       str_detect(description,'interference') == TRUE ~ 17,
